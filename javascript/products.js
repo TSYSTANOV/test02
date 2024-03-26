@@ -1,13 +1,19 @@
 import { API_component } from "./api.js";
+import { MODAL_component } from "./modal.js";
 
 class Products {
   ROOT_element;
   constructor(root) {
     this.ROOT_element = root;
   }
-  async renderProducts(category = "Все товары") {
-    const DATA = await API_component.getGoods();
-    console.log(DATA);
+  async renderProducts(category = "Все товары", filterCategory) {
+    let DATA = await API_component.getGoods();
+
+    document.querySelector(this.ROOT_element).innerHTML = ''
+
+    if(filterCategory && filterCategory !== 'Все'){
+      DATA = DATA.filter((el)=>el.category === filterCategory)
+    }
 
     const container = document.createElement("div");
     container.className = "container";
@@ -35,12 +41,24 @@ class Products {
     div.append(listOfProducts);
     container.append(div);
     document.querySelector(this.ROOT_element).append(container);
+    this.getSingleProduct(listOfProducts)
   }
   renderTitleOfProducts(title) {
     const div = document.createElement("div");
     div.className = "cards_items_title";
     div.innerHTML = `<h2>${title}</h2>`;
     return div;
+  }
+  getSingleProduct(HTMLelement){
+    HTMLelement.addEventListener('click',()=>{
+
+      if(!event.target.closest('.item__product') || event.target.tagName === 'BUTTON'){
+        return
+      }
+      else{
+        MODAL_component.renderModalWindow(event.target.closest('.item__product').dataset.productId)
+      }
+    })
   }
 }
 

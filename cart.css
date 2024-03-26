@@ -163,8 +163,8 @@
   outline: none;
 }
 .cart_container_footer_info {
-  display: none;
-  /* display:flex; */
+  /* display: none; */
+  display:flex;
   padding: 10px 5px;
   justify-content: space-between;
   align-items: center;
@@ -184,7 +184,7 @@
   color: #b1b1b1;
   text-align: right;
   font-family: Nunito;
-  font-size: 10px;
+  font-size: 14px;
   font-style: normal;
   font-weight: 400;
   line-height: normal;
@@ -201,7 +201,7 @@
 .cart__open {
   max-height: 400px;
   overflow: auto;
-  display: none;
+  /* display: none; */
   padding: 0px 10px 16px 10px;
   /*position: absolute;*/
   width: 100%;

@@ -3,8 +3,8 @@ class API {
   constructor(url) {
     this.BASE_URL = url;
   }
-  getGoods() {
-    return fetch(`${this.BASE_URL}/api/product`).then((response) =>
+  getGoods(id='') {
+    return fetch(`${this.BASE_URL}/api/product/${id}`).then((response) =>
       response.json()
     );
   }

@@ -99,11 +99,11 @@ ul li {
     gap: 38px;
   }
 }
-.cards_items__products {
+/* .cards_items__products {
   opacity: 0;
   /* transition:0.5s; */
-  transform: scale(0.5);
-}
+  /* transform: scale(0.5); */
+/* }  */
 .greyPrice {
   background-color: grey;
 }
