@@ -1,19 +1,29 @@
 import { API_component } from "./api.js";
 import { MODAL_component } from "./modal.js";
+import { LOCALSTORAGE_component } from "./localStorage.js";
 
 class Products {
+  activeBtnClass;
+  activeCardClass;
+  activeBtnText;
   ROOT_element;
-  constructor(root) {
+  constructor(root, activeBtnClass, activeCardClass, activeBtnText) {
     this.ROOT_element = root;
+    this.activeBtnClass = activeBtnClass;
+    this.activeCardClass = activeCardClass;
+    this.activeBtnText = activeBtnText;
   }
   async renderProducts(category = "Все товары", filterCategory) {
+    document.querySelector(this.ROOT_element).innerHTML = "";
     let DATA = await API_component.getGoods();
 
-    document.querySelector(this.ROOT_element).innerHTML = ''
-
-    if(filterCategory && filterCategory !== 'Все'){
-      DATA = DATA.filter((el)=>el.category === filterCategory)
+    if (filterCategory && filterCategory !== "Все") {
+      DATA = DATA.filter((el) => el.category === filterCategory);
     }
+
+    const goodsInCart = LOCALSTORAGE_component.getItem("cartYouMeal").map(
+      (el) => el.id
+    );
 
     const container = document.createElement("div");
     container.className = "container";
@@ -26,13 +36,21 @@ class Products {
     const products = DATA.map((item) => {
       const div = document.createElement("div");
       div.dataset.productId = item.id;
-      div.className = "item__product";
+
+      div.className = `item__product ${
+        goodsInCart.includes(item.id) ? this.activeCardClass : ""
+      }`;
+
       div.innerHTML = `
         <img src="${item.image}" alt="${item.category}" />
                 <p class="item__product1">${item.price}<span> ₽</span></p>
                 <p class="product_name">${item.title}</p>
                 <p class="product_detail">${item.weight}г</p>
-                <button>Добавить</button>
+                <button class='${
+                  goodsInCart.includes(item.id) ? this.activeBtnClass : ""
+                }'>${
+        goodsInCart.includes(item.id) ? this.activeBtnText : "Добавить"
+      }</button>
             `;
       return div;
     });
@@ -41,7 +59,7 @@ class Products {
     div.append(listOfProducts);
     container.append(div);
     document.querySelector(this.ROOT_element).append(container);
-    this.getSingleProduct(listOfProducts)
+    this.getSingleProduct(listOfProducts);
   }
   renderTitleOfProducts(title) {
     const div = document.createElement("div");
@@ -49,18 +67,38 @@ class Products {
     div.innerHTML = `<h2>${title}</h2>`;
     return div;
   }
-  getSingleProduct(HTMLelement){
-    HTMLelement.addEventListener('click',()=>{
-
-      if(!event.target.closest('.item__product') || event.target.tagName === 'BUTTON'){
-        return
+  getSingleProduct(HTMLelement) {
+    let activeProduct = false;
+    HTMLelement.addEventListener("click", () => {
+      if (!event.target.closest(".item__product")) {
+        return;
+      } else {
+        if (
+          event.target
+            .closest(".item__product")
+            .classList.contains(this.activeCardClass)
+        ) {
+          activeProduct = true;
+        } else {
+          activeProduct = false;
+        }
+        MODAL_component.renderModalWindow(
+          event.target.closest(".item__product").dataset.productId,
+          activeProduct
+        );
       }
-      else{
-        MODAL_component.renderModalWindow(event.target.closest('.item__product').dataset.productId)
-      }
-    })
+    });
   }
 }
 
-const PRODUCTS_component = new Products(".cards_items");
+const PRODUCTS_component = new Products(
+  ".cards_items",
+  "item__product__active__btn",
+  "item__product__active",
+  "Добавлено в корзину"
+);
 export { PRODUCTS_component };
+// <!-- for button
+// .item__product__active__btn
+// for .card
+// .item__product__active -->

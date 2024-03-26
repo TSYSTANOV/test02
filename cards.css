@@ -77,7 +77,7 @@
   font-weight: 400;
   line-height: 100%; /* 12px */
   border-radius: 8px;
-  background: #f2f2f3;
+  /* background: #f2f2f3; */
   padding: 11px;
   border: none;
   width: 100%;
@@ -155,4 +155,11 @@
 
 .active__product__cards {
   background-color: #ffad0894;
+}
+.item__product__active {
+  background-color: #ffad0894;
+}
+.item__product__active__btn {
+  background: #ff7020;
+  color: white;
 }
