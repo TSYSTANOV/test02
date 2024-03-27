@@ -95,7 +95,7 @@ class ModalWindow {
     this.modalListenerAdd(modalContainer, DATA.id, checkCount, [
       modalFooterSummary,
       container,
-    ]);
+    ],DATA.price);
   }
   closeModal(HTMLelement) {
     HTMLelement.addEventListener("click", () => {
@@ -169,8 +169,9 @@ class ModalWindow {
       modalWindow.remove();
     }, 1000);
   }
-  modalListenerAdd(HTMLelement, id, countCallback, elementToDelete) {
+  modalListenerAdd(HTMLelement, id, countCallback, elementToDelete, price) {
     HTMLelement.addEventListener("click", () => {
+
       if (!event.target.classList.contains("modal__card-footer_button")) {
         return;
       } else {
@@ -182,7 +183,7 @@ class ModalWindow {
           .querySelector("button")
           .classList.add(this.activeClassBtn);
         this.changesAfterAddToCart(
-          { id, count: countCallback() },
+          { id, count: countCallback(), price},
           event.target,
           elementToDelete,
           HTMLelement

@@ -1,5 +1,7 @@
 import { API_component } from "./api.js";
 import { LOCALSTORAGE_component } from "./localStorage.js";
+import { MODAL_CLIENT_component } from "./modalClient.js";
+import { PRODUCTS_component } from "./products.js";
 
 class Cart {
   ROOT_element;
@@ -16,7 +18,12 @@ class Cart {
     this.changeCountInCart();
     this.GOODSinCart = LOCALSTORAGE_component.getItem("cartYouMeal");
     this.changeCountInCart();
+    ///
 
+    const cartOpen = document.createElement("div");
+    cartOpen.className = "cart__open";
+
+    ///
     const cartContainer = document.createElement("div");
     cartContainer.className = "cart_container";
 
@@ -36,14 +43,14 @@ class Cart {
       }
     });
 
-    cartContainer.append(btnCart);
+    cartContainer.append(btnCart,cartOpen);
     document.querySelector(this.ROOT_element).append(cartContainer);
-    this.CART_OPEN_element = ".cart_container";
+    this.CART_OPEN_element = ".cart__open";
     this.visibleCount();
   }
   async openCart() {
-    const cartOpen = document.createElement("div");
-    cartOpen.className = "cart__open";
+    // const cartOpen = document.createElement("div");
+    // cartOpen.className = "cart__open";
 
     const cartContent = document.createElement("div");
     cartContent.className = "cartGeneral__content";
@@ -58,13 +65,17 @@ class Cart {
     const elements = listOfProducts
       .map((el) => {
         const goods = this.GOODSinCart.find((elem) => elem.id === el.id);
-        el.count = goods.count;
-        return el;
+        el.count = goods ? goods.count : null
+        return el.count ? el : null;
       })
       .map((item) => {
+        if(item === null){
+          return null
+        }
         const container = document.createElement("div");
         container.className = "cart_container_content_card";
-        container.innerHTML = `      
+        container.dataset.productId = item.id
+        container.innerHTML = `
       <img src="${item.image}" alt="${item.category}" />
       <div class="card_text">
         <h2>${item.title}</h2>
@@ -78,9 +89,14 @@ class Cart {
    </div>`;
 
         return container;
-      });
+      })
 
+    if(elements[0] !== null){
     cartList.append(...elements);
+    }
+    else{
+      cartList.append(this.emptyCartMessage())
+    }
 
     const cartFooterBlock = document.createElement("div");
     cartFooterBlock.className = "cart_container__footer__block";
@@ -88,8 +104,12 @@ class Cart {
     cartFooter.className = "cart_container_footer";
     cartFooter.innerHTML = `
           <p>Итого</p>
-          <p>1029 <span>₽</span></p>
           `;
+    const totalSum = this.sumTotalInCart(this.GOODSinCart)
+    const pElem = document.createElement('p')
+    pElem.innerHTML = `<p>${totalSum ? totalSum : 0} <span>₽</span></p>`
+
+    cartFooter.append(pElem)
 
     const btnSendRequest = document.createElement("button");
     btnSendRequest.className = "cart_container_footer_button";
@@ -110,14 +130,34 @@ class Cart {
     footerBlock.append(btnCloseCart);
     cartFooterBlock.append(cartFooter, btnSendRequest, footerBlock);
     cartContent.append(cartList, cartFooterBlock);
-    cartOpen.append(cartContent);
-    document.querySelector(this.CART_OPEN_element).append(cartOpen);
-    this.CART_CLOSE_element = ".cart__open";
-    this.addListener(cartList);
+    // cartOpen.append(cartContent);
+
+    // document.querySelector(this.CART_OPEN_element).append(cartOpen);
+    document.querySelector(this.CART_OPEN_element).append(cartContent);
+
+    // this.CART_CLOSE_element = ".cart__open";
+    this.CART_CLOSE_element = '.cartGeneral__content'
+    this.addListener(cartContent, cartFooterBlock);
+    cartContent.style.maxHeight = cartContent.scrollHeight + 'px'
   }
+
   closeCart() {
-    document.querySelector(this.CART_CLOSE_element).remove();
+    if(this.CartIsOpen){
+    document.querySelector(this.CART_CLOSE_element).style.maxHeight = '0px'
+    document.querySelector(this.CART_CLOSE_element).style.top = '-40px'
+
+    setTimeout(()=>{
+      document.querySelector(this.CART_CLOSE_element).remove();
+    },1000)
     this.CartIsOpen = false;
+    }
+  }
+  cartTonull(){
+    this.GOODSinCart = []
+    LOCALSTORAGE_component.setItem("cartYouMeal", this.GOODSinCart);
+    this.closeCart()
+    this.changeCountInCart()
+    this.visibleCount()
   }
   changeCountInCart() {
     this.GoodsInCartCount = this.GOODSinCart.reduce((acc, el) => {
@@ -130,7 +170,6 @@ class Cart {
     catalog.querySelector(this.countClass).textContent = this.GoodsInCartCount;
   }
   set addToCart(product) {
-    console.log(this.GoodsInCartCount);
     this.GOODSinCart.push(product);
     this.changeCountInCart();
     this.visibleCount();
@@ -139,10 +178,69 @@ class Cart {
   get cartIsOpen() {
     return this.CartIsOpen;
   }
+  sumTotalInCart(cart){
+    const totalSum = cart.reduce((acc, el)=>{
+      acc += el.price * el.count
+      return acc
+    },0)
+    return totalSum ? totalSum : 0
+  }
+  visibleChangeSumTotalInCart(HTMLelement, sum){
+    HTMLelement.querySelector('.cart_container_footer').innerHTML = `
+    <p>Итого</p>
+    <p>${sum} <span>₽</span></p>`
+  }
+  emptyCartMessage(){
+    const p = document.createElement('p')
+    p.className = 'empty-cart'
+    p.textContent = 'Корзина пустая'
+    return p
+  }
+  addListener(HTMLelement, footerCartElement) {
 
-  addListener(HTMLelement) {
-    HTMLelement.addEventListener("click", () => {
-      console.log(1);
+    HTMLelement.addEventListener("click", (event) => {
+      if(event.target.classList.contains('cart_container_footer_button')){
+        MODAL_CLIENT_component.GoodsToSendToServer = this.GOODSinCart
+        MODAL_CLIENT_component.renderModal()
+        return
+      }
+      if(event.target.classList.contains('minus_number') || event.target.classList.contains('plus_number')){
+        let index = null
+        this.GOODSinCart.forEach((el, i)=>{
+        if(el.id === event.target.closest('.cart_container_content_card').dataset.productId)  {
+          index = i
+        }
+        })
+
+      let count = +event.target.parentNode.querySelector('p').textContent
+      if(event.target.classList.contains('minus_number')){
+        count--
+        event.target.parentNode.querySelector('p').textContent = count
+        if(count < 1){
+          event.target.closest('.cart_container_content_card').remove()
+          this.GOODSinCart.splice(index, 1)
+          PRODUCTS_component.removeActiveInCartClass(event.target.closest('.cart_container_content_card').dataset.productId)
+        }else{
+          this.GOODSinCart[index].count = count
+        }
+        this.changeCountInCart()
+        this.visibleCount()
+      }
+      if(event.target.classList.contains('plus_number')){
+        count++
+        event.target.parentNode.querySelector('p').textContent = count
+        this.GOODSinCart[index].count = count
+        this.changeCountInCart()
+        this.visibleCount()
+      }
+      LOCALSTORAGE_component.setItem("cartYouMeal", this.GOODSinCart);
+      this.visibleChangeSumTotalInCart(footerCartElement, this.sumTotalInCart(this.GOODSinCart))
+      if(this.GOODSinCart.length === 0){
+        HTMLelement.append(this.emptyCartMessage())
+      }
+    }else{
+      return
+    }
     });
   }
 }

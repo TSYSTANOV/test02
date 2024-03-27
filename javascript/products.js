@@ -1,6 +1,7 @@
 import { API_component } from "./api.js";
 import { MODAL_component } from "./modal.js";
 import { LOCALSTORAGE_component } from "./localStorage.js";
+import { CART_component } from "./cart.js";
 
 class Products {
   activeBtnClass;
@@ -86,8 +87,17 @@ class Products {
           event.target.closest(".item__product").dataset.productId,
           activeProduct
         );
+        CART_component.closeCart()
       }
     });
+  }
+  removeActiveInCartClass(productId){
+    const root = document.querySelector(this.ROOT_element)
+    const element = root.querySelector(`[data-product-id="${productId}"]`)
+    if(element){
+      element.querySelector('button').classList.remove('item__product__active__btn')
+      element.classList.remove('item__product__active')
+    }
   }
 }
 
@@ -98,7 +108,3 @@ const PRODUCTS_component = new Products(
   "Добавлено в корзину"
 );
 export { PRODUCTS_component };
-// <!-- for button
-// .item__product__active__btn
-// for .card
-// .item__product__active -->
